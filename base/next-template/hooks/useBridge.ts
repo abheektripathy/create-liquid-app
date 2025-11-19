@@ -10,6 +10,7 @@ import {
   NEXUS_EVENTS,
   BridgeStepType,
 } from "@avail-project/nexus-core";
+import { parseUnits } from "viem";
 
 // Define event handler parameter type
 interface NexusEvent {
@@ -55,12 +56,13 @@ export function useBridge() {
           throw new Error(`Token ${token} not supported`);
         }
 
+        const amountWei = parseUnits(amount, tokenMetadata.decimals);
+        console.log(amountWei);
         const result = await nexusSDK.simulateBridge({
           token: token as keyof typeof TOKEN_METADATA,
-          amount: BigInt(amount),
+          amount: amountWei,
           toChainId,
         });
-
         setSimulation(result);
         setCurrentStep("");
         return result;
@@ -99,80 +101,15 @@ export function useBridge() {
         }
 
         setCurrentStep("Initiating bridge...");
+        const amountWei = parseUnits(amount, tokenMetadata.decimals);
 
-        // Use the bridge method with onEvent to track progress
         const result: BridgeResult = await nexusSDK.bridge(
           {
             token: token as keyof typeof TOKEN_METADATA,
             amount: BigInt(amount),
             toChainId,
           },
-          {
-            onEvent: (event: NexusEvent) => {
-              try {
-                if (event.name === NEXUS_EVENTS.STEPS_LIST) {
-                  const stepsList = Array.isArray(event.args)
-                    ? (event.args as BridgeStepType[])
-                    : [];
-                  setSteps(stepsList);
-                  console.log("Bridge steps:", stepsList);
-                }
-              } catch (error) {
-                console.error("Error processing steps list:", error);
-              }
-              try {
-                if (event.name === NEXUS_EVENTS.STEP_COMPLETE) {
-                  const stepIndex =
-                    typeof event.args === "number" ? event.args : 0;
-                  setCurrentStepIndex(stepIndex);
-                  if (steps[stepIndex]) {
-                    // Create a readable description based on the step type
-                    const step = steps[stepIndex];
-                    let description = "";
-
-                    if (typeof step === "object" && step.type) {
-                      switch (step.type) {
-                        case "ALLOWANCE_USER_APPROVAL":
-                          description = "Waiting for allowance approval...";
-                          break;
-                        case "TRANSACTION_SENT":
-                          description =
-                            "Transaction sent, waiting for confirmation...";
-                          break;
-                        default:
-                          description = `Processing step: ${step.type}`;
-                      }
-                    }
-
-                    setCurrentStepDescription(description);
-                    setCurrentStep(description);
-                  }
-                  console.log(`Completed step ${stepIndex}:`, steps[stepIndex]);
-                }
-              } catch (error) {
-                console.error("Error processing step completion:", error);
-              }
-
-              try {
-                // Handle other custom events - these are not part of NEXUS_EVENTS enum
-                // but can be handled as custom events
-                if (event.name === "INTENT_CREATED") {
-                  console.log("Intent created:", event);
-                  toast.info("Please approve the transaction in your wallet", {
-                    duration: 10000,
-                  });
-                }
-                if (event.name === "ALLOWANCE_REQUIRED") {
-                  console.log("Allowance required:", event);
-                  toast.info("Please approve the token allowance", {
-                    duration: 10000,
-                  });
-                }
-              } catch (error) {
-                console.error("Error handling custom event:", error);
-              }
-            },
-          },
+          {},
         );
         setCurrentStep("");
 
