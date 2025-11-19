@@ -93,6 +93,7 @@ const NexusProvider = ({
     sdk.setOnAllowanceHook((data: OnAllowanceHookData) => {
       console.log("🔔 Allowance hook triggered:", data);
 
+      //this extra approval is not needed at all, but here for the sake of example on how to check extra conditions on the hook level
       const toastId = toast.info("Token approval required", {
         duration: 10000,
         description: "You need to approve access to your tokens",
