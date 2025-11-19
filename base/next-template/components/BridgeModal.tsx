@@ -44,11 +44,11 @@ export default function BridgeModal({
     ).values(),
   );
 
-  const [selectedToken, setSelectedToken] = useState(
-    availableTokenSymbols[0] || "USDC",
+  const [selectedToken, setSelectedToken] = useState<string | undefined>(
+    undefined,
   );
-  const [selectedChain, setSelectedChain] = useState(
-    availableChains[0]?.id || 1,
+  const [selectedChain, setSelectedChain] = useState<number | undefined>(
+    undefined,
   );
   const [amount, setAmount] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
@@ -83,7 +83,12 @@ export default function BridgeModal({
   };
 
   const handleSimulate = async () => {
-    if (!selectedToken || !amount || parseFloat(amount) <= 0) {
+    if (
+      !selectedToken ||
+      !selectedChain ||
+      !amount ||
+      parseFloat(amount) <= 0
+    ) {
       return;
     }
 
@@ -99,6 +104,9 @@ export default function BridgeModal({
   };
 
   const handleConfirm = async () => {
+    if (!selectedToken || !selectedChain) {
+      return;
+    }
     const result = await executeBridge({
       token: selectedToken,
       amount,
@@ -319,10 +327,13 @@ export default function BridgeModal({
               Token to receive
             </label>
             <select
-              value={selectedToken}
-              onChange={(e) => setSelectedToken(e.target.value)}
+              value={selectedToken || ""}
+              onChange={(e) => setSelectedToken(e.target.value || undefined)}
               className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+              <option value="" disabled>
+                Select token
+              </option>
               {availableTokenSymbols.map((token) => (
                 <option key={token} value={token}>
                   {token}
@@ -402,10 +413,17 @@ export default function BridgeModal({
               Destination Chain
             </label>
             <select
-              value={selectedChain}
-              onChange={(e) => setSelectedChain(Number(e.target.value))}
+              value={selectedChain || ""}
+              onChange={(e) =>
+                setSelectedChain(
+                  e.target.value ? Number(e.target.value) : undefined,
+                )
+              }
               className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+              <option value="" disabled>
+                Select chain
+              </option>
               {availableChains.map((chain) => (
                 <option key={chain.id} value={chain.id}>
                   {chain.name}
@@ -450,6 +468,12 @@ export default function BridgeModal({
                 </svg>
                 Simulating...
               </>
+            ) : !selectedToken ? (
+              "Select token"
+            ) : !selectedChain ? (
+              "Select chain"
+            ) : !amount || parseFloat(amount || "0") <= 0 ? (
+              "Enter amount"
             ) : (
               `Bridge to ${destinationChain?.name}`
             )}
