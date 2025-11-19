@@ -4,16 +4,16 @@ import ora from "ora";
 import path from "path";
 import fs from "fs-extra";
 import { input, select } from "@inquirer/prompts";
-import degit from "degit";
 import { z } from "zod";
 import { detectPackageManager, run } from "./utils/exec.js";
 import {
   TEMPLATE_SOURCES,
+  SUPPORTED_OPTIONS,
   type Framework,
   type WidgetFlavor,
   type AuthProvider,
 } from "./utils/templates.ts";
-import { applyCustomizations } from "./utils/customize.js";
+import { applyCustomizations } from "./utils/customize.ts";
 import { asciiArt } from "./utils/ascii.ts";
 
 const program = new Command();
@@ -66,13 +66,14 @@ program
         ],
       }))) as Framework;
 
-    const widgets = (opts.widgets ??
+    let widgets = (opts.widgets ??
       (await select<WidgetFlavor>({
         message: "Choose Nexus's Iteration to use",
         choices: [
           {
             name: "Nexus Widgets (coming soon)",
             value: "nexus-widgets",
+            disabled: true,
             description:
               "Use Avail's ready-to-use UI components for a 3 line quick integration",
           },
@@ -86,7 +87,7 @@ program
             name: "Nexus Elements (plug & play shadcn elements for easy integrations + customisability)",
             value: "nexus-elements",
             description:
-              "Build custom UI with Avail's core SDK for maximum flexibility",
+              "Shadcn UI components powered by Nexus Core for easy integration & customizability",
           },
         ],
       }))) as WidgetFlavor;
@@ -136,15 +137,28 @@ program
     ) {
       console.log(
         chalk.yellow(
-          "Only Wagmi + FamilyConnect is currently supported. Defaulting to Wagmi + FamilyConnect.",
+          "Only Wagmi + ConnectKit is currently supported. Defaulting to Wagmi + ConnectKit.",
         ),
       );
       auth = "wagmi-familyconnect" as AuthProvider;
     }
 
+    if (
+      widgets !== "nexus-core" &&
+      widgets !== "nexus-elements" &&
+      widgets === "nexus-widgets"
+    ) {
+      console.log(
+        chalk.yellow(
+          "Only Nexus Core and Nexus Elements are currently supported. Defaulting to Nexus Core.",
+        ),
+      );
+      widgets = "nexus-core" as WidgetFlavor;
+    }
+
     const SelectionSchema = z.object({
       framework: z.enum(["next", "react-vite", "svelte"]),
-      widgets: z.enum(["nexus-widgets", "nexus-core"]),
+      widgets: z.enum(["nexus-widgets", "nexus-core", "nexus-elements"]),
       auth: z.enum(["privy", "dynamic", "wagmi-familyconnect"]),
       dir: z.string().min(1),
     });
@@ -162,18 +176,17 @@ program
     }
     await fs.mkdirp(projectDir);
 
-    const spinner = ora(`Cloning ${framework} template...`).start();
+    const spinner = ora(`Copying ${framework} template...`).start();
     try {
-      const { repo, branch } = TEMPLATE_SOURCES[framework];
-      const emitter = degit(`${repo}${branch ? `#${branch}` : ""}`, {
-        cache: false,
-        force: true,
-        verbose: false,
-      });
-      await emitter.clone(projectDir);
-      spinner.succeed("Template cloned.");
+      // Use the local template instead of cloning from a repo
+      const templatePath = path.resolve(
+        process.cwd(),
+        TEMPLATE_SOURCES.localPath,
+      );
+      await fs.copy(templatePath, projectDir);
+      spinner.succeed("Template copied.");
     } catch (err) {
-      spinner.fail("Failed to clone template.");
+      spinner.fail("Failed to copy template.");
       console.error(err);
       process.exit(1);
     }

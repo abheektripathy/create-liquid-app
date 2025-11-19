@@ -13,13 +13,8 @@ export async function applyCustomizations(
   widgets: WidgetFlavor,
   auth: AuthProvider,
 ) {
-  if (framework === "next") {
-    await customizeNext(projectDir, widgets, auth);
-  } else if (framework === "react-vite") {
-    await customizeViteReact(projectDir, widgets, auth);
-  } else if (framework === "svelte") {
-    await customizeSvelte(projectDir, widgets, auth);
-  }
+  // For now, only Next.js is supported
+  await customizeNext(projectDir, widgets, auth);
 }
 
 async function customizeNext(
@@ -32,8 +27,6 @@ async function customizeNext(
     "# Fill these and rename to .env.local",
     "NEXT_PUBLIC_CHAIN_ID=23294",
     "NEXT_PUBLIC_AVAIL_RPC=https://rpc.availproject.org",
-    auth === "privy" ? "PRIVY_APP_ID=" : "",
-    auth === "dynamic" ? "DYNAMIC_ENV_ID=" : "",
   ].filter(Boolean);
   await fs.writeFile(envPath, envLines.join("\n"), "utf8");
 
@@ -44,7 +37,50 @@ async function customizeNext(
     { spaces: 2 },
   );
 
+  if (widgets === "nexus-core") {
+    await removeElementsComponents(projectDir);
+  } else if (widgets === "nexus-elements") {
+    await replaceWithElementsComponents(projectDir);
+  }
+
   console.log(chalk.green("Applied Next.js customizations."));
+}
+
+/**
+ * Removes the elements-specific components when nexus-core is chosen
+ */
+async function removeElementsComponents(projectDir: string) {
+  await fs.remove(path.join(projectDir, "components", "common"));
+  await fs.remove(path.join(projectDir, "components", "fast-bridge"));
+  await fs.remove(path.join(projectDir, "components", "unified-balance"));
+  await fs.remove(path.join(projectDir, "app", "elements"));
+
+  console.log(chalk.blue("Removed Elements components for nexus-core setup"));
+}
+
+/**
+ * Replaces core components with elements components when nexus-elements is chosen
+ */
+async function replaceWithElementsComponents(projectDir: string) {
+  const elementsPagePath = path.join(projectDir, "app", "elements", "page.tsx");
+  const mainPagePath = path.join(projectDir, "app", "page.tsx");
+
+  if (await fs.pathExists(elementsPagePath)) {
+    const elementsPage = await fs.readFile(elementsPagePath, "utf8");
+    await fs.writeFile(mainPagePath, elementsPage, "utf8");
+    await fs.remove(path.join(projectDir, "app", "elements"));
+  }
+
+  await fs.remove(path.join(projectDir, "components", "BalanceDashboard.tsx"));
+  await fs.remove(path.join(projectDir, "components", "BridgeModal.tsx"));
+  await fs.remove(path.join(projectDir, "components", "ExecuteModal.tsx"));
+
+  await fs.remove(path.join(projectDir, "hooks", "useAaveDeposit.ts"));
+  await fs.remove(path.join(projectDir, "hooks", "useBridge.ts"));
+
+  console.log(
+    chalk.blue("Set up Elements as the main UI for nexus-elements setup"),
+  );
 }
 
 async function customizeViteReact(
