@@ -38,6 +38,8 @@ pnpm dlx ./create-liquid-apps-1.0.0.tgz
 
 ## Publishing
 
+### Manual Publishing
+
 1. **Update version** in `package.json`
 2. **Build the package**:
    ```bash
@@ -56,6 +58,29 @@ pnpm dlx ./create-liquid-apps-1.0.0.tgz
    ```bash
    npm publish
    ```
+
+### Automated Publishing with GitHub Actions
+
+This project includes a GitHub Action workflow that automatically publishes to npm when pushing to the `release` branch:
+
+1. **Create a new release commit** with the version in the commit message:
+   ```bash
+   # Update your code, then commit with version in the message
+   git commit -m "Release version 1.2.3"
+   ```
+
+2. **Push to the release branch**:
+   ```bash
+   git push origin main:release
+   ```
+
+3. The GitHub Action will:
+   - Extract the version from your commit message (format: 1.2.3 or v1.2.3)
+   - Update the package.json version
+   - Build the package
+   - Publish to npm
+
+**Note:** You need to add an `NPM_TOKEN` secret to your GitHub repository settings. This token must have publish permissions for your npm account.
 
 ### First-time publish notes
 

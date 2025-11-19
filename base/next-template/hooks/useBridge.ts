@@ -57,7 +57,6 @@ export function useBridge() {
         }
 
         const amountWei = parseUnits(amount, tokenMetadata.decimals);
-        console.log(amountWei);
         const result = await nexusSDK.simulateBridge({
           token: token as keyof typeof TOKEN_METADATA,
           amount: amountWei,
@@ -106,7 +105,7 @@ export function useBridge() {
         const result: BridgeResult = await nexusSDK.bridge(
           {
             token: token as keyof typeof TOKEN_METADATA,
-            amount: BigInt(amount),
+            amount: amountWei,
             toChainId,
           },
           {},
