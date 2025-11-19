@@ -1,9 +1,11 @@
+#!/usr/bin/env node
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
 import path from "path";
 import fs from "fs-extra";
 import { input, select } from "@inquirer/prompts";
+import degit from "degit";
 import { z } from "zod";
 import { detectPackageManager, run } from "./utils/exec.js";
 import {
@@ -12,9 +14,9 @@ import {
   type Framework,
   type WidgetFlavor,
   type AuthProvider,
-} from "./utils/templates.ts";
-import { applyCustomizations } from "./utils/customize.ts";
-import { asciiArt } from "./utils/ascii.ts";
+} from "./utils/templates.js";
+import { applyCustomizations } from "./utils/customize.js";
+import { asciiArt } from "./utils/ascii.js";
 
 const program = new Command();
 
@@ -176,17 +178,20 @@ program
     }
     await fs.mkdirp(projectDir);
 
-    const spinner = ora(`Copying ${framework} template...`).start();
+    const spinner = ora(`Cloning ${framework} template...`).start();
     try {
-      // Use the local template instead of cloning from a repo
-      const templatePath = path.resolve(
-        process.cwd(),
-        TEMPLATE_SOURCES.localPath,
-      );
-      await fs.copy(templatePath, projectDir);
-      spinner.succeed("Template copied.");
+      // Use degit to clone the specific directory from the GitHub repo
+      // Format for subdirectory: user/repo/subdir#branch
+      const repoPath = `${TEMPLATE_SOURCES.githubRepo}/${TEMPLATE_SOURCES.templatePath}#${TEMPLATE_SOURCES.branch}`;
+      const emitter = degit(repoPath, {
+        cache: false,
+        force: true,
+        verbose: false,
+      });
+      await emitter.clone(projectDir);
+      spinner.succeed("Template cloned.");
     } catch (err) {
-      spinner.fail("Failed to copy template.");
+      spinner.fail("Failed to clone template.");
       console.error(err);
       process.exit(1);
     }

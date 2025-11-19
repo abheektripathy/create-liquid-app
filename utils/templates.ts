@@ -9,5 +9,8 @@ export const SUPPORTED_OPTIONS = {
 };
 
 export const TEMPLATE_SOURCES = {
-  localPath: "base/next-template",
+  // User and repo name in format needed for degit (without https://github.com/)
+  githubRepo: "abheektripathy/create-liquid-app",
+  branch: "main",
+  templatePath: "base/next-template",
 };

@@ -1,0 +1,23 @@
+# Source files (not needed in published package)
+*.ts
+tsconfig.json
+
+# Development files
+.git
+.gitignore
+.eslintcache
+
+# OS files
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Test files
+*.test.js
+*.spec.js
+__tests__
+
+# Don't ignore dist - it's needed for the package!
+!dist

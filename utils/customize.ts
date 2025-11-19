@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
-import type { WidgetFlavor, AuthProvider, Framework } from "./templates.ts";
+import type { WidgetFlavor, AuthProvider, Framework } from "./templates.js";
 
 /**
  * Apply user selections to the cloned template.
@@ -23,11 +23,7 @@ async function customizeNext(
   auth: AuthProvider,
 ) {
   const envPath = path.join(projectDir, ".env.local.example");
-  const envLines = [
-    "# Fill these and rename to .env.local",
-    "NEXT_PUBLIC_CHAIN_ID=23294",
-    "NEXT_PUBLIC_AVAIL_RPC=https://rpc.availproject.org",
-  ].filter(Boolean);
+  const envLines = ["# Fill these and rename to .env.local"].filter(Boolean);
   await fs.writeFile(envPath, envLines.join("\n"), "utf8");
 
   const configPath = path.join(projectDir, "liquid.config.json");
