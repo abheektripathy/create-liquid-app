@@ -93,78 +93,31 @@ const NexusProvider = ({
     sdk.setOnAllowanceHook((data: OnAllowanceHookData) => {
       console.log("🔔 Allowance hook triggered:", data);
 
-      //this extra approval is not needed at all, but here for the sake of example on how to check extra conditions on the hook level
-      const toastId = toast.info("Token approval required", {
-        duration: 10000,
-        description: "You need to approve access to your tokens",
-        action: {
-          label: "Approve",
-          onClick: async () => {
-            try {
-              data.allow(["max"]);
-              console.log("Allowance approved successfully");
-              toast.success("Tokens approved");
-            } catch (error) {
-              console.error("Error approving allowance:", error);
-              toast.error("Failed to approve tokens");
-            } finally {
-              if (toastId) toast.dismiss(toastId);
-              setAllowance(null);
-            }
-          },
-        },
-      });
-
-      setTimeout(() => {
-        if (data && typeof data.deny === "function") {
-          try {
-            data.deny();
-            console.log("Allowance automatically denied (timeout)");
-          } catch (error) {
-            console.error("Error auto-denying allowance:", error);
-          }
-        }
-      }, 12000);
-
-      setAllowance(data);
+      try {
+        data.allow(["min"]);
+        console.log("Allowance automatically approved");
+        toast.success("Tokens approved");
+      } catch (error) {
+        console.error("Error approving allowance:", error);
+        toast.error("Failed to approve tokens");
+      } finally {
+        setAllowance(null);
+      }
     });
 
     sdk.setOnIntentHook((data: OnIntentHookData) => {
       console.log("🔔 Intent hook triggered:", data);
 
-      const toastId = toast.info("Transaction confirmation needed", {
-        duration: 10000,
-        description: "Please confirm your transaction",
-        action: {
-          label: "Confirm",
-          onClick: async () => {
-            try {
-              data.allow();
-              console.log("Transaction approved successfully");
-              toast.success("Transaction confirmed");
-            } catch (error) {
-              console.error("Error approving transaction:", error);
-              toast.error("Failed to approve transaction");
-            } finally {
-              if (toastId) toast.dismiss(toastId);
-              setIntent(null);
-            }
-          },
-        },
-      });
-
-      setTimeout(() => {
-        if (data && typeof data.deny === "function") {
-          try {
-            data.deny();
-            console.log("Transaction automatically denied (timeout)");
-          } catch (error) {
-            console.error("Error auto-denying transaction:", error);
-          }
-        }
-      }, 1200000);
-
-      setIntent(data);
+      try {
+        data.allow();
+        console.log("Transaction automatically approved");
+        toast.success("Transaction confirmed");
+      } catch (error) {
+        console.error("Error approving transaction:", error);
+        toast.error("Failed to approve transaction");
+      } finally {
+        setIntent(null);
+      }
     });
 
     console.log("Event hooks attached successfully");
