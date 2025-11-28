@@ -3,9 +3,9 @@ export type WidgetFlavor = "nexus-widgets" | "nexus-core" | "nexus-elements";
 export type AuthProvider = "privy" | "dynamic" | "wagmi-familyconnect";
 
 export const SUPPORTED_OPTIONS = {
-  frameworks: ["next"] as Framework[],
+  frameworks: ["next", "react-vite"] as Framework[],
   widgetFlavors: ["nexus-core", "nexus-elements"] as WidgetFlavor[],
-  authProviders: ["wagmi-familyconnect"] as AuthProvider[],
+  authProviders: ["wagmi-familyconnect", "privy", "dynamic"] as AuthProvider[],
 };
 
 export const TEMPLATE_SOURCES = {
@@ -13,4 +13,5 @@ export const TEMPLATE_SOURCES = {
   githubRepo: "abheektripathy/create-liquid-app",
   branch: "main",
   templatePath: "base/next-template",
+  viteTemplatePath: "base/react-template",
 };

@@ -1,6 +1,6 @@
 {
   "name": "create-liquid-apps",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Scaffold Avail Nexus demo apps with framework + auth + widgets choices",
   "bin": {
     "create-liquid-apps": "./dist/index.js"

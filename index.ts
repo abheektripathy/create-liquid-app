@@ -53,9 +53,8 @@ program
               "Recommended full-stack React framework with SSR support",
           },
           {
-            name: "React + Vite (Coming Soon)",
+            name: "React + Vite",
             value: "react-vite",
-            disabled: true,
             description:
               "Lightweight React setup with Vite for faster development",
           },
@@ -68,30 +67,40 @@ program
         ],
       }))) as Framework;
 
+    const widgetChoices: Array<{
+      name: string;
+      value: WidgetFlavor;
+      description: string;
+      disabled?: boolean;
+    }> =
+      framework === "react-vite"
+        ? [
+            {
+              name: "Nexus Elements (plug & play shadcn elements for easy integrations + customisability)",
+              value: "nexus-elements",
+              description:
+                "Shadcn UI components powered by Nexus Core for easy integration & customizability",
+            },
+          ]
+        : [
+            {
+              name: "Nexus Core (lower-level SDK)",
+              value: "nexus-core",
+              description:
+                "Build custom UI with Avail's core SDK for maximum flexibility",
+            },
+            {
+              name: "Nexus Elements (plug & play shadcn elements for easy integrations + customisability)",
+              value: "nexus-elements",
+              description:
+                "Shadcn UI components powered by Nexus Core for easy integration & customizability",
+            },
+          ];
+
     let widgets = (opts.widgets ??
       (await select<WidgetFlavor>({
         message: "Choose Nexus's Iteration to use",
-        choices: [
-          {
-            name: "Nexus Widgets (coming soon)",
-            value: "nexus-widgets",
-            disabled: true,
-            description:
-              "Use Avail's ready-to-use UI components for a 3 line quick integration",
-          },
-          {
-            name: "Nexus Core (lower-level SDK)",
-            value: "nexus-core",
-            description:
-              "Build custom UI with Avail's core SDK for maximum flexibility",
-          },
-          {
-            name: "Nexus Elements (plug & play shadcn elements for easy integrations + customisability)",
-            value: "nexus-elements",
-            description:
-              "Shadcn UI components powered by Nexus Core for easy integration & customizability",
-          },
-        ],
+        choices: widgetChoices,
       }))) as WidgetFlavor;
 
     let auth = (opts.auth ??
@@ -99,21 +108,19 @@ program
         message: "Choose auth/provider:",
         choices: [
           {
-            name: "Privy (Coming Soon)",
+            name: "Privy",
             value: "privy",
-            disabled: true,
             description:
               "Simple wallet and social login with embedded wallet creation",
           },
           {
-            name: "Dynamic (Coming Soon)",
+            name: "Dynamic",
             value: "dynamic",
-            disabled: true,
             description:
               "Multi-chain authentication with embedded wallet support",
           },
           {
-            name: "Wagmi + FamilyConnect",
+            name: "Wagmi + ConnectKit",
             value: "wagmi-familyconnect",
             description:
               "Popular React hooks library with smart account support",
@@ -123,11 +130,12 @@ program
 
     if (
       framework !== "next" &&
-      (framework === "react-vite" || framework === "svelte")
+      framework !== "react-vite" &&
+      framework === "svelte"
     ) {
       console.log(
         chalk.yellow(
-          "Only Next.js is currently supported. Defaulting to Next.js.",
+          "Only Next.js and React+Vite are currently supported. Defaulting to Next.js.",
         ),
       );
       framework = "next" as Framework;
@@ -145,7 +153,15 @@ program
       auth = "wagmi-familyconnect" as AuthProvider;
     }
 
-    if (
+    if (framework === "react-vite" && widgets !== "nexus-elements") {
+      console.log(
+        chalk.yellow(
+          "Only Nexus Elements is currently supported for React+Vite. Defaulting to Nexus Elements.",
+        ),
+      );
+      widgets = "nexus-elements" as WidgetFlavor;
+    } else if (
+      framework !== "react-vite" &&
       widgets !== "nexus-core" &&
       widgets !== "nexus-elements" &&
       widgets === "nexus-widgets"
@@ -182,7 +198,11 @@ program
     try {
       // Use degit to clone the specific directory from the GitHub repo
       // Format for subdirectory: user/repo/subdir#branch
-      const repoPath = `${TEMPLATE_SOURCES.githubRepo}/${TEMPLATE_SOURCES.templatePath}#${TEMPLATE_SOURCES.branch}`;
+      const templatePath =
+        framework === "react-vite"
+          ? TEMPLATE_SOURCES.viteTemplatePath
+          : TEMPLATE_SOURCES.templatePath;
+      const repoPath = `${TEMPLATE_SOURCES.githubRepo}/${templatePath}#${TEMPLATE_SOURCES.branch}`;
       const emitter = degit(repoPath, {
         cache: false,
         force: true,
